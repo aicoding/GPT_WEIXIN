@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .item {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+
+        .item img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #333;
+        }
+
+        .item-description {
+            font-size: 14px;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                column-count: 5;
+            }
+        }
+
+        @media (min-width: 601px) {
+            .container {
+                column-count: 10;
+            }
+        }
+
+        #pagination {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        #pagination button {
+            margin: 0 10px;
+        }
+        #pagination button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        #pagination button:hover {
+            background-color: #0056b3;
+        }
+        
+        #pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+    </style>
+</head>
+<body>
+
+<div class="container" id="content"></div>
+
+<div id="pagination">
+    <button id="prevPage">上一页</button>
+    <span id="pageInfo"></span>
+    <button id="nextPage">下一页</button>
+</div>
+
+<script>
+let currentPage = 1;
+const pageSize = 30;
+
+async function loadAndDisplayJSON() {
+    const response = await fetch(`/data?page=${currentPage}&page_size=${pageSize}`);  // 获取 JSON 数据
+    const data = await response.json();
+
+    const content = document.getElementById('content');
+    content.innerHTML = '';  // 清空内容
+
+    data.forEach((item) => {
+        const img = document.createElement('img');
+        img.src = item.logo_url;
+        img.title = item.description_for_human;  // 添加 title 属性
+        img.style.cursor = 'pointer';
+        img.onclick = () => {
+            navigator.clipboard.writeText(item.url);
+            alert('URL copied to clipboard');
+        };
+
+        const pName = document.createElement('p');
+        pName.textContent = item.name_for_human;
+        pName.className = 'item-name';
+
+        const pDescription = document.createElement('p');
+        pDescription.textContent = item.description_for_human;
+        pDescription.className = 'item-description';
+
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.appendChild(img);
+        div.appendChild(pName);
+        div.appendChild(pDescription);
+
+        content.appendChild(div);
+    });
+}
+
+async function loadTotalPages() {
+    const response = await fetch(`/total_pages?page_size=${pageSize}`);
+    const data = await response.json();
+    return data.total_pages;
+}
+
+async function updatePageInfo() {
+    const totalPages = await loadTotalPages();
+    document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
+}
+
+document.getElementById('prevPage').addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage--;
+        loadAndDisplayJSON();
+        updatePageInfo();
+    }
+});
+
+document.getElementById('nextPage').addEventListener('click', async () => {
+    const totalPages = await loadTotalPages();
+    if (currentPage < totalPages) {
+        currentPage++;
+        loadAndDisplayJSON();
+        updatePageInfo();
+    }
+});
+
+loadAndDisplayJSON();
+updatePageInfo();
+</script>
+
+</body>
+</html>

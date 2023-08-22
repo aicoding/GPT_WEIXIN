@@ -1,0 +1,7 @@
+{
+    "enabled": false,
+    "user":"root",
+    "password":"nopass.2",
+    "host":"10.100.202.164:3306",
+    "database":"xxl_api"
+}
